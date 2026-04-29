@@ -235,7 +235,7 @@ async function verifierTrajetEnCours() {
       const trajet = data.value.find(t => {
         const fields = t.fields;
         const statut = fields["Statut0"] || "";
-        if (statut !== "En cours") return false;
+        if (!statut.includes("En cours") && !statut.includes("En\ncours")) return false;
         const titre = fields["Title"] || "";
         return titre.startsWith(etat.vehiculeId);
       });
