@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1D9E75" />
+  <title>Cahier de bord — Canopée</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+</head>
+<body>
+
+  <!-- ÉCRAN DE CONNEXION -->
+  <div id="ecran-connexion" class="ecran actif">
+    <div class="logo-block">
+      <div class="logo-icon">🚗</div>
+      <h1>Cahier de bord</h1>
+      <p class="sous-titre">Association des Dames de la Providence — Canopée</p>
+    </div>
+    <button id="btn-connexion" class="btn-principal" onclick="seConnecter()">
+      Se connecter avec mon compte Microsoft
+    </button>
+    <p class="mention">Connexion sécurisée via votre compte professionnel</p>
+  </div>
+
+  <!-- ÉCRAN ACCUEIL (après connexion) -->
+  <div id="ecran-accueil" class="ecran">
+    <header class="app-header">
+      <div>
+        <div class="header-titre">Cahier de bord</div>
+        <div id="nom-utilisateur" class="header-sous-titre">Chargement...</div>
+      </div>
+      <button class="btn-deconnexion" onclick="seDeconnecter()">Déconnexion</button>
+    </header>
+
+    <div class="contenu">
+      <div class="card-vehicule" id="info-vehicule">
+        <div class="vehicule-label">Véhicule</div>
+        <div class="vehicule-nom" id="vehicule-nom">Chargement...</div>
+        <div class="vehicule-unite" id="vehicule-unite"></div>
+      </div>
+
+      <div id="trajet-en-cours" class="alerte-trajet" style="display:none">
+        <div class="alerte-icone">⏱</div>
+        <div>
+          <div class="alerte-titre">Trajet en cours</div>
+          <div class="alerte-detail" id="detail-trajet-en-cours"></div>
+        </div>
+      </div>
+
+      <button class="btn-principal" id="btn-depart" onclick="allerVers('ecran-depart')">
+        Démarrer un trajet
+      </button>
+      <button class="btn-secondaire" id="btn-retour" onclick="allerVers('ecran-retour')" style="display:none">
+        Clôturer le trajet en cours
+      </button>
+    </div>
+  </div>
+
+  <!-- ÉCRAN FORMULAIRE DÉPART -->
+  <div id="ecran-depart" class="ecran">
+    <header class="app-header">
+      <button class="btn-retour-nav" onclick="allerVers('ecran-accueil')">← Retour</button>
+      <div class="header-titre">Départ de trajet</div>
+      <div></div>
+    </header>
+
+    <div class="contenu">
+      <div class="formulaire">
+
+        <div class="champ-groupe">
+          <label class="champ-label">Conducteur</label>
+          <select id="select-conducteur" class="champ-input">
+            <option value="">Chargement des salariés...</option>
+          </select>
+        </div>
+
+        <div class="champ-ligne-double">
+          <div class="champ-groupe">
+            <label class="champ-label">Date de départ</label>
+            <input type="date" id="date-depart" class="champ-input" />
+          </div>
+          <div class="champ-groupe">
+            <label class="champ-label">Heure de départ</label>
+            <input type="time" id="heure-depart" class="champ-input" />
+          </div>
+        </div>
+
+        <div class="champ-groupe">
+          <label class="champ-label">Kilométrage au départ</label>
+          <div class="champ-km">
+            <input type="number" id="km-depart" class="champ-input" placeholder="Ex: 47230" min="0" />
+            <span class="km-unite">km</span>
+          </div>
+        </div>
+
+        <div class="champ-groupe">
+          <label class="champ-label">Motif du déplacement</label>
+          <select id="select-motif" class="champ-input">
+            <option value="">Sélectionnez un motif</option>
+            <option>Accompagnement Jeune</option>
+            <option>Rdv Médical</option>
+            <option>Démarche Administrative</option>
+            <option>Courses / Approvisionement</option>
+            <option>Astreinte</option>
+            <option>Dépannage</option>
+            <option>Sortie</option>
+            <option>Autre</option>
+          </select>
+        </div>
+
+        <div class="champ-groupe">
+          <label class="champ-label">Nombre de passagers</label>
+          <select id="select-passagers" class="champ-input">
+            <option value="0">0 passager</option>
+            <option value="1">1 passager</option>
+            <option value="2">2 passagers</option>
+            <option value="3">3 passagers</option>
+            <option value="4">4+ passagers</option>
+          </select>
+        </div>
+
+        <div class="champ-groupe">
+          <label class="champ-label">Commentaire (optionnel)</label>
+          <textarea id="commentaire-depart" class="champ-input champ-textarea" placeholder="Précisions sur le trajet..."></textarea>
+        </div>
+
+        <div class="champ-checkbox">
+          <input type="checkbox" id="dommage-depart" />
+          <label for="dommage-depart">Dommage constaté sur le véhicule au départ</label>
+        </div>
+
+        <button class="btn-principal" onclick="soumettreDepart()">
+          Démarrer le trajet
+        </button>
+
+        <div id="msg-depart" class="message" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN FORMULAIRE RETOUR -->
+  <div id="ecran-retour" class="ecran">
+    <header class="app-header">
+      <button class="btn-retour-nav" onclick="allerVers('ecran-accueil')">← Retour</button>
+      <div class="header-titre">Clôture de trajet</div>
+      <div></div>
+    </header>
+
+    <div class="contenu">
+      <div class="formulaire">
+
+        <div class="recap-trajet" id="recap-trajet">
+          <div class="recap-titre">Trajet en cours</div>
+          <div id="recap-detail"></div>
+        </div>
+
+        <div class="champ-ligne-double">
+          <div class="champ-groupe">
+            <label class="champ-label">Date de retour</label>
+            <input type="date" id="date-retour" class="champ-input" />
+          </div>
+          <div class="champ-groupe">
+            <label class="champ-label">Heure de retour</label>
+            <input type="time" id="heure-retour" class="champ-input" />
+          </div>
+        </div>
+
+        <div class="champ-groupe">
+          <label class="champ-label">Kilométrage au retour</label>
+          <div class="champ-km">
+            <input type="number" id="km-retour" class="champ-input" placeholder="Ex: 47298" min="0" oninput="calculerDistance()" />
+            <span class="km-unite">km</span>
+          </div>
+        </div>
+
+        <div class="calcul-distance" id="calcul-distance" style="display:none">
+          Distance parcourue : <strong id="valeur-distance">0</strong> km
+        </div>
+
+        <div class="champ-groupe">
+          <label class="champ-label">Commentaire retour (optionnel)</label>
+          <textarea id="commentaire-retour" class="champ-input champ-textarea" placeholder="RAS, incident, remarque..."></textarea>
+        </div>
+
+        <div class="champ-checkbox">
+          <input type="checkbox" id="dommage-retour" />
+          <label for="dommage-retour">Incident ou dommage à signaler</label>
+        </div>
+
+        <button class="btn-principal" onclick="soumettreRetour()">
+          Clôturer le trajet
+        </button>
+
+        <div id="msg-retour" class="message" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN CONFIRMATION -->
+  <div id="ecran-confirmation" class="ecran">
+    <div class="contenu centrer">
+      <div class="confirmation-icone">✓</div>
+      <h2 class="confirmation-titre" id="confirmation-titre">Trajet enregistré !</h2>
+      <p class="confirmation-detail" id="confirmation-detail"></p>
+      <button class="btn-principal" onclick="allerVers('ecran-accueil')">
+        Retour à l'accueil
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.10.0/lib/msal-browser.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Codes véhicules — Canopée</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 2rem; color: #1a1a1a; }
+    h1 { text-align: center; font-size: 22px; font-weight: 600; margin-bottom: 0.5rem; color: #0F6E56; }
+    .sous-titre { text-align: center; font-size: 14px; color: #666; margin-bottom: 2rem; }
+    .config { background: white; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; border: 1px solid #e0e0e0; max-width: 600px; margin-left: auto; margin-right: auto; }
+    .config label { font-size: 13px; font-weight: 500; color: #555; display: block; margin-bottom: 6px; }
+    .config input { width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+    .config input:focus { outline: none; border-color: #1D9E75; box-shadow: 0 0 0 3px rgba(29,158,117,0.15); }
+    .btn-generer { width: 100%; padding: 11px; background: #1D9E75; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-generer:hover { background: #0F6E56; }
+    .compteur { text-align: center; font-size: 13px; color: #888; margin-bottom: 1.5rem; }
+    .grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem; max-width: 1200px; margin: 0 auto; }
+    .carte { background: white; border-radius: 16px; border: 1px solid #e0e0e0; overflow: hidden; page-break-inside: avoid; break-inside: avoid; }
+    .carte-header { background: #1D9E75; padding: 12px 14px; color: white; }
+    .carte-immat { font-size: 18px; font-weight: 700; letter-spacing: 0.05em; }
+    .carte-marque { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+    .carte-unite { display: inline-block; background: rgba(255,255,255,0.2); border-radius: 20px; padding: 2px 9px; font-size: 11px; margin-top: 5px; }
+    .carte-body { padding: 1rem; display: flex; flex-direction: column; align-items: center; }
+    .qr-container { width: 160px; height: 160px; margin-bottom: 0.75rem; }
+    .qr-container img, .qr-container canvas { width: 160px !important; height: 160px !important; }
+    .carte-url { font-size: 10px; color: #aaa; font-family: monospace; word-break: break-all; text-align: center; margin-bottom: 0.75rem; }
+    .carte-instruction { font-size: 11px; color: #555; text-align: center; line-height: 1.5; padding: 7px 10px; background: #f5f5f5; border-radius: 8px; width: 100%; }
+    .btn-imprimer { display: block; margin: 2rem auto; padding: 12px 32px; background: #1a1a1a; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-imprimer:hover { background: #333; }
+    @media print {
+      body { background: white; padding: 0.5cm; }
+      .config, .btn-imprimer, h1, .sous-titre, .compteur { display: none; }
+      .grille { grid-template-columns: repeat(4, 1fr); gap: 0.5cm; }
+      .carte { border: 1px solid #ccc; border-radius: 8px; }
+      .carte-url { display: none; }
+    }
+  </style>
+</head>
+<body>
+<h1>🚗 QR Codes véhicules — Canopée</h1>
+<p class="sous-titre">Imprimez et collez chaque QR code dans l'habitacle du véhicule correspondant</p>
+<div class="config">
+  <label>URL de l'application (à modifier après hébergement sur Azure)</label>
+  <input type="text" id="base-url" value="http://localhost:5500/index.html" />
+  <button class="btn-generer" onclick="genererQRCodes()">🔄 Régénérer les QR codes</button>
+</div>
+<p class="compteur" id="compteur"></p>
+<div class="grille" id="grille"></div>
+<button class="btn-imprimer" onclick="window.print()">🖨️ Imprimer tous les QR codes</button>
+<script>
+const vehicules = [
+  { immat: "EY-898-SP",  marque: "Peugeot 208",      unite: "Mutualisé" },
+  { immat: "FC-793-ER",  marque: "Fiat Fiorino",      unite: "Entretien" },
+  { immat: "EZ-711-WY",  marque: "Citroën C1",        unite: "Les Minots" },
+  { immat: "EG3-346-VB", marque: "Peugeot Partner",   unite: "Entretien" },
+  { immat: "FL-503-NL",  marque: "Citroën Berlingo",  unite: "Les Bambins" },
+  { immat: "EZ-563-WY",  marque: "Citroën C1",        unite: "SJM" },
+  { immat: "EZ-748-WY",  marque: "Citroën C1",        unite: "SAJE" },
+  { immat: "FZ-020-YJ",  marque: "Piaggio Scooter",   unite: "Administratif" },
+  { immat: "FK-535-HX",  marque: "Citroën Berlingo",  unite: "Les Mignons" },
+  { immat: "EJ-632-XB",  marque: "Peugeot 108",       unite: "SAJE" },
+  { immat: "FT-305-KY",  marque: "Citroën Berlingo",  unite: "Les Mignons" },
+  { immat: "FT-292-KY",  marque: "Citroën Berlingo",  unite: "Les Créatifs" },
+  { immat: "FT-331-KY",  marque: "Citroën Berlingo",  unite: "Les Autonomes" },
+  { immat: "DJ-345-AG",  marque: "Peugeot Expert",    unite: "Les Minots" },
+  { immat: "GB-341-ZA",  marque: "Dacia Sandero",     unite: "Famille" },
+  { immat: "GG-947-NV",  marque: "Opel Zafira Life",  unite: "Mutualisé" },
+  { immat: "GJ-631-MT",  marque: "Dacia Sandero",     unite: "Famille" },
+  { immat: "GK-397-HS",  marque: "Citroën Berlingo",  unite: "Mutualisé" },
+  { immat: "GR-585-HD",  marque: "Dacia Sandero",     unite: "SJM" },
+  { immat: "GR-710-HD",  marque: "Dacia Sandero",     unite: "Administratif" },
+  { immat: "GS-826-HB",  marque: "Dacia Jogger",      unite: "Vitalis" },
+  { immat: "GW-731-HG",  marque: "Yamaha Nmax",       unite: "Entretien" },
+  { immat: "GX-750-LT",  marque: "Dacia Sandero",     unite: "Famille" },
+  { immat: "GX-083-TB",  marque: "Dacia Jogger",      unite: "Arpège" },
+  { immat: "GY-777-GV",  marque: "Toyota Yaris",      unite: "Administratif" },
+];
+
+function genererQRCodes() {
+  const baseUrl = document.getElementById("base-url").value.trim();
+  const grille = document.getElementById("grille");
+  grille.innerHTML = "";
+  document.getElementById("compteur").textContent = vehicules.length + " véhicules";
+  vehicules.forEach(function(v) {
+    const url = baseUrl + "?v=" + encodeURIComponent(v.immat);
+    const safeId = "qr-" + v.immat.replace(/[^a-zA-Z0-9]/g, '');
+    const carte = document.createElement("div");
+    carte.className = "carte";
+    carte.innerHTML = '<div class="carte-header"><div class="carte-immat">' + v.immat + '</div><div class="carte-marque">' + v.marque + '</div><div class="carte-unite">' + v.unite + '</div></div><div class="carte-body"><div class="qr-container" id="' + safeId + '"></div><div class="carte-url">' + url + '</div><div class="carte-instruction">📱 Scannez ce QR code pour enregistrer un trajet</div></div>';
+    grille.appendChild(carte);
+    new QRCode(document.getElementById(safeId), {
+      text: url,
+      width: 160,
+      height: 160,
+      colorDark: "#0F6E56",
+      colorLight: "#FFFFFF",
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  });
+}
+window.onload = genererQRCodes;
+</script>
+</body>
+</html>
