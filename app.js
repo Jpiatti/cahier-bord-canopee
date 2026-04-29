@@ -356,7 +356,7 @@ async function soumettreRetour() {
 
     if (etat.vehiculeItemId) {
       await appelGraph(`${urlListe("Vehicules")}/items/${etat.vehiculeItemId}/fields`, "PATCH", {
-        Km_actuel: parseInt(kmRetour)
+        Kilom_x00e9_trageactuel: parseInt(kmRetour)
       });
     }
 
