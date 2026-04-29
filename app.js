@@ -228,7 +228,8 @@ async function obtenirIdNumerique(listeKey, graphId) {
 async function verifierTrajetEnCours() {
   if (!etat.vehiculeId) return;
   try {
-    const data = await appelGraph(`${urlListe("Trajets")}/items?$expand=fields&$filter=fields/Statut0 eq 'En cours'`);
+    const data = await appelGraph(`${urlListe("Trajets")}/items?$expand=fields&$top=50`);
+    console.log("TOUS les champs du dernier trajet:", JSON.stringify(data.value[data.value.length-1]?.fields));
     if (data.value) {
       console.log("Trajets en cours trouvés:", JSON.stringify(data.value.map(t => t.fields)));
       const trajet = data.value.find(t => {
