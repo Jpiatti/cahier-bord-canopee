@@ -29,7 +29,7 @@ const msalConfig = {
   auth: {
     clientId: CONFIG.clientId,
     authority: `https://login.microsoftonline.com/${CONFIG.tenantId}`,
-    redirectUri: "http://localhost:5500/index.html",
+    redirectUri: "https://cahier-bord-canopee.netlify.app/index.html",
   },
   cache: { cacheLocation: "sessionStorage" },
 };
