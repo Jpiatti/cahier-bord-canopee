@@ -22,7 +22,7 @@ const COLS = {
   Km_Retour:          "KmRetour",
   Km_Parcourus:       "KmParcourus",
   Commentaire_Retour: "CommentaireRetour",
-  Statut:             "Statut",
+  Statut:             "Statut0",
 };
 
 const msalConfig = {
