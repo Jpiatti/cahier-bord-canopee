@@ -230,6 +230,7 @@ async function verifierTrajetEnCours() {
   try {
     const data = await appelGraph(`${urlListe("Trajets")}/items?$expand=fields&$filter=fields/Statut eq 'En cours'`);
     if (data.value) {
+      console.log("Trajets en cours trouvés:", JSON.stringify(data.value.map(t => t.fields)));
       const trajet = data.value.find(t => {
         const fields = t.fields;
         // Vérifier toutes les façons dont le véhicule peut être stocké
