@@ -231,11 +231,16 @@ async function verifierTrajetEnCours() {
     const data = await appelGraph(`${urlListe("Trajets")}/items?$expand=fields&$filter=fields/Statut eq 'En cours'`);
     if (data.value) {
       const trajet = data.value.find(t => {
-        const veh = t.fields[COLS.Vehicule];
-        if (!veh) return false;
+        const fields = t.fields;
+        // Vérifier toutes les façons dont le véhicule peut être stocké
+        const veh = fields[COLS.Vehicule] || fields["V_x00e9_hicule"] || fields["VehiculeLookupId"];
+        const titre = fields["V_x00e9_hiculeLookupId"] || fields[COLS.Vehicule + "LookupId"];
+        if (!veh && !titre) return false;
         if (typeof veh === 'string') return veh === etat.vehiculeId;
-        if (typeof veh === 'object') return veh.Title === etat.vehiculeId;
-        return false;
+        if (typeof veh === 'object' && veh !== null) return veh.Title === etat.vehiculeId;
+        // Chercher aussi dans le titre du lookup
+        const lookupTitle = fields["V_x00e9_hicule@odata.navigationLinkUrl"] || "";
+        return lookupTitle.includes(etat.vehiculeId);
       });
       if (trajet) {
         etat.trajetEnCoursId = trajet.id;
