@@ -234,15 +234,10 @@ async function verifierTrajetEnCours() {
       console.log("Trajets en cours trouvés:", JSON.stringify(data.value.map(t => t.fields)));
       const trajet = data.value.find(t => {
         const fields = t.fields;
-        // Vérifier toutes les façons dont le véhicule peut être stocké
-        const veh = fields[COLS.Vehicule] || fields["V_x00e9_hicule"] || fields["VehiculeLookupId"];
-        const titre = fields["V_x00e9_hiculeLookupId"] || fields[COLS.Vehicule + "LookupId"];
-        if (!veh && !titre) return false;
-        if (typeof veh === 'string') return veh === etat.vehiculeId;
-        if (typeof veh === 'object' && veh !== null) return veh.Title === etat.vehiculeId;
-        // Chercher aussi dans le titre du lookup
-        const lookupTitle = fields["V_x00e9_hicule@odata.navigationLinkUrl"] || "";
-        return lookupTitle.includes(etat.vehiculeId);
+        const statut = fields["Statut0"] || "";
+        if (statut !== "En cours") return false;
+        const titre = fields["Title"] || "";
+        return titre.startsWith(etat.vehiculeId);
       });
       if (trajet) {
         etat.trajetEnCoursId = trajet.id;
